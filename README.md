@@ -1,4 +1,4 @@
 q-dev-libs
 ==========
 
-Libraries for 
+Libraries for game development.
