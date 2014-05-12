@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#include <GL\glew.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <stdio.h>
@@ -28,7 +29,7 @@ namespace qsb
 
 		if(!context)
 		{
-			printf("Couldn't create context: %d\n", SDL_GetError());
+			printf("Couldn't create context: %s\n", SDL_GetError());
 			return 0;
 		}
 
@@ -48,7 +49,15 @@ namespace qsb
 		glOrtho(0,_screenWidth, _screenHeight, 0, -10,10);
 
 		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();	
+		glLoadIdentity();
+
+		glewExperimental = GL_TRUE;
+		GLenum error = glewInit();
+		if(error!=GLEW_OK)
+		{
+			printf("Error initializing glew: %s\n", glewGetErrorString(error));
+			return 0;
+		}
 
 		return 1;
 	}

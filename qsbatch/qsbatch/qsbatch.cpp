@@ -3,10 +3,12 @@
 
 #include "stdafx.h"
 
+#include <GL\glew.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <iostream>
 #include "glbatch.h"
+
 
 const int SCREENWIDTH = 800;
 const int SCREENHEIGHT = 600;
