@@ -5,6 +5,7 @@
 #include <SDL_opengl.h>
 #include <stdio.h>
 #include <assert.h>
+#include <stdlib.h>
 
 namespace qsb
 {
@@ -85,17 +86,48 @@ namespace qsb
 	struct Batch
 	{
 	
+		GLuint dataPerVertex;
+		GLuint length;
+
 		GLuint shaderProgram;
 		GLint vertexLocation;
-	
+
+		GLfloat* vertextData;
+		GLuint* indexData;
+
+		GLuint vbDataPointer;
+		GLuint ibDataPointer;
+		GLuint vertexCount;
+		
 	};
 
-	Batch createBatch()
+	Batch createBatch(int _dataPerVertex, int _length)
 	{
 		
-		Batch batch;
+		Batch batch = {};
+		
+		batch.length = _length;
+		batch.dataPerVertex = _dataPerVertex;
+		
+		batch.shaderProgram = 0;
+		batch.vertexLocation = -1;
+		
+		batch.vertextData = (GLfloat*) malloc(_length * _dataPerVertex * sizeof(GLfloat));
+		batch.indexData = (GLuint*) malloc(_length * sizeof(GLuint));
+
+		batch.vbDataPointer = 0;
+
 		return batch;
 	
+	}
+
+	// this does not destroy the shaderProgram, it needs to be done manually
+	void destroyBatch(Batch* _batch)
+	{
+
+		free(_batch->vertextData);
+		free(_batch->indexData);
+
 	}
 
 	void batch_setProgram(Batch* _batch, GLuint _program)
@@ -107,12 +139,6 @@ namespace qsb
 
 	bool batch_setVertextLocation(Batch* _batch, char* vertextAttribName)
 	{
-		
-		if(!(_batch->shaderProgram)) 
-		{
-			printf("No program set\N");
-		}
-
 		_batch->vertexLocation = glGetAttribLocation(_batch->shaderProgram, vertextAttribName);
 		
 		if(_batch->vertexLocation == -1)
@@ -123,6 +149,91 @@ namespace qsb
 		
 		return true;
 	
+	}
+
+	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLuint _i1)
+	{
+		_batch->vertextData[_batch->vbDataPointer++] = _x;
+		_batch->indexData[_batch->ibDataPointer++] = _i1;
+		_batch->vertexCount++;
+	}
+
+	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLuint _i1)
+	{
+		_batch->vertextData[_batch->vbDataPointer++] = _x;
+		_batch->vertextData[_batch->vbDataPointer++] = _y;
+		_batch->indexData[_batch->ibDataPointer++] = _i1;
+		_batch->vertexCount++;
+	}
+
+	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLuint _i1)
+	{
+		_batch->vertextData[_batch->vbDataPointer++] = _x;
+		_batch->vertextData[_batch->vbDataPointer++] = _y;
+		_batch->vertextData[_batch->vbDataPointer++] = _z;
+		_batch->indexData[_batch->ibDataPointer++] = _i1;
+		_batch->vertexCount++;
+	}
+
+	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLuint _i1)
+	{
+		_batch->vertextData[_batch->vbDataPointer++] = _x;
+		_batch->vertextData[_batch->vbDataPointer++] = _y;
+		_batch->vertextData[_batch->vbDataPointer++] = _z;
+		_batch->vertextData[_batch->vbDataPointer++] = _w;
+		_batch->indexData[_batch->ibDataPointer++] = _i1;
+		_batch->vertexCount++;
+	}
+
+	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLuint _i1)
+	{
+		_batch->vertextData[_batch->vbDataPointer++] = _x;
+		_batch->vertextData[_batch->vbDataPointer++] = _y;
+		_batch->vertextData[_batch->vbDataPointer++] = _z;
+		_batch->vertextData[_batch->vbDataPointer++] = _w;
+		_batch->vertextData[_batch->vbDataPointer++] = _u;
+		_batch->indexData[_batch->ibDataPointer++] = _i1;
+		_batch->vertexCount++;
+	}
+
+	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLfloat _v, GLuint _i1)
+	{
+		_batch->vertextData[_batch->vbDataPointer++] = _x;
+		_batch->vertextData[_batch->vbDataPointer++] = _y;
+		_batch->vertextData[_batch->vbDataPointer++] = _z;
+		_batch->vertextData[_batch->vbDataPointer++] = _w;
+		_batch->vertextData[_batch->vbDataPointer++] = _u;
+		_batch->vertextData[_batch->vbDataPointer++] = _v;
+		_batch->indexData[_batch->ibDataPointer++] = _i1;
+		_batch->vertexCount++;
+	}
+
+	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLfloat _v, GLfloat _m, GLuint _i1)
+	{
+		_batch->vertextData[_batch->vbDataPointer++] = _x;
+		_batch->vertextData[_batch->vbDataPointer++] = _y;
+		_batch->vertextData[_batch->vbDataPointer++] = _z;
+		_batch->vertextData[_batch->vbDataPointer++] = _w;
+		_batch->vertextData[_batch->vbDataPointer++] = _u;
+		_batch->vertextData[_batch->vbDataPointer++] = _v;
+		_batch->vertextData[_batch->vbDataPointer++] = _m;
+		_batch->indexData[_batch->ibDataPointer++] = _i1;
+		_batch->vertexCount++;
+	}
+
+	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLfloat _v, GLfloat _m, GLfloat _n, 
+		GLuint _i1)
+	{
+		_batch->vertextData[_batch->vbDataPointer++] = _x;
+		_batch->vertextData[_batch->vbDataPointer++] = _y;
+		_batch->vertextData[_batch->vbDataPointer++] = _z;
+		_batch->vertextData[_batch->vbDataPointer++] = _w;
+		_batch->vertextData[_batch->vbDataPointer++] = _u;
+		_batch->vertextData[_batch->vbDataPointer++] = _v;
+		_batch->vertextData[_batch->vbDataPointer++] = _m;
+		_batch->vertextData[_batch->vbDataPointer++] = _n;
+		_batch->indexData[_batch->ibDataPointer++] = _i1;
+		_batch->vertexCount++;
 	}
 #pragma endregion
 
@@ -214,6 +325,8 @@ namespace qsb
 			printf("Unable to link program\n");
 			printProgramLog(program);
 		}
+
+		return program;
 	
 	}
 
