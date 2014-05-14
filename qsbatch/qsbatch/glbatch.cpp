@@ -6,14 +6,23 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <vector>
+#include "glbatch.h"
 
 namespace qsb
 {
 
 	static SDL_Window* window;
 	static SDL_GLContext context;
+
 	static int screenWidth;
 	static int screenHeight;
+	
+	static std::vector<Batch> batchList;
+	static int numBatches;
+
+	static GLuint vertexBuffer;
+	static GLuint indexBuffer;
 
 #pragma region "internal"
 	void printShaderLog( GLuint shader )
@@ -82,40 +91,37 @@ namespace qsb
 #pragma endregion
 
 
-#pragma region "batch"
-	struct Batch
+#pragma region "batch funcs"
+
+	VertexAttribute createVA()
 	{
-	
-		GLuint dataPerVertex;
-		GLuint length;
+		VertexAttribute ret;
+		ret.location = -1;
+		ret.dim = 1;
+		ret.skip = 0;
+		ret.start = 0;
+		ret.type = GL_FLOAT;
 
-		GLuint shaderProgram;
-		GLint vertexLocation;
-
-		GLfloat* vertextData;
-		GLuint* indexData;
-
-		GLuint vbDataPointer;
-		GLuint ibDataPointer;
-		GLuint vertexCount;
-		
-	};
+		return ret;
+	}
 
 	Batch createBatch(int _dataPerVertex, int _length)
 	{
 		
 		Batch batch = {};
 		
-		batch.length = _length;
 		batch.dataPerVertex = _dataPerVertex;
+		batch.length = _length;
 		
 		batch.shaderProgram = 0;
-		batch.vertexLocation = -1;
 		
 		batch.vertextData = (GLfloat*) malloc(_length * _dataPerVertex * sizeof(GLfloat));
 		batch.indexData = (GLuint*) malloc(_length * sizeof(GLuint));
 
 		batch.vbDataPointer = 0;
+		batch.ibDataPointer = 0;
+
+		batch.numAttributes = 0;
 
 		return batch;
 	
@@ -137,19 +143,14 @@ namespace qsb
 	
 	}
 
-	bool batch_setVertextLocation(Batch* _batch, char* vertextAttribName)
+	int pushBatch(Batch _batch)
 	{
-		_batch->vertexLocation = glGetAttribLocation(_batch->shaderProgram, vertextAttribName);
-		
-		if(_batch->vertexLocation == -1)
-		{
-			printf("Not a valid variable name\n");
-			return false;
-		}
-		
-		return true;
-	
+		batchList.push_back(_batch);
+		numBatches ++;
+		return batchList.size() - 1;
 	}
+
+#pragma region "push functions"
 
 	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLuint _i1)
 	{
@@ -208,7 +209,7 @@ namespace qsb
 		_batch->vertexCount++;
 	}
 
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLfloat _v, GLfloat _m, GLuint _i1)
+	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLfloat _v, GLfloat _t, GLuint _i1)
 	{
 		_batch->vertextData[_batch->vbDataPointer++] = _x;
 		_batch->vertextData[_batch->vbDataPointer++] = _y;
@@ -216,38 +217,32 @@ namespace qsb
 		_batch->vertextData[_batch->vbDataPointer++] = _w;
 		_batch->vertextData[_batch->vbDataPointer++] = _u;
 		_batch->vertextData[_batch->vbDataPointer++] = _v;
-		_batch->vertextData[_batch->vbDataPointer++] = _m;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
-	}
-
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLfloat _v, GLfloat _m, GLfloat _n, 
-		GLuint _i1)
-	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->vertextData[_batch->vbDataPointer++] = _y;
-		_batch->vertextData[_batch->vbDataPointer++] = _z;
-		_batch->vertextData[_batch->vbDataPointer++] = _w;
-		_batch->vertextData[_batch->vbDataPointer++] = _u;
-		_batch->vertextData[_batch->vbDataPointer++] = _v;
-		_batch->vertextData[_batch->vbDataPointer++] = _m;
-		_batch->vertextData[_batch->vbDataPointer++] = _n;
+		_batch->vertextData[_batch->vbDataPointer++] = _t;
 		_batch->indexData[_batch->ibDataPointer++] = _i1;
 		_batch->vertexCount++;
 	}
 #pragma endregion
+#pragma endregion
 
 	int initGLBatch(int _screenWidth, int _screenHeight, int _defaultColor, SDL_Window* _window)
 	{
-		
+		////////////////////
+		//   Batch things
+
 		// store values
 		screenWidth = screenWidth;
 		screenHeight = _screenHeight;
 		window = _window;
 
+		batchList = std::vector<Batch>();
+		numBatches = 0;
+
+		////////////////////
+		//   OGL things
+
 		// create ogl context
 		context = SDL_GL_CreateContext(_window);
-
+		
 		if(!context)
 		{
 			printf("Couldn't create context: %s\n", SDL_GetError());
@@ -265,7 +260,6 @@ namespace qsb
 		int b = _defaultColor >> 8 & 0xff;
 		int a = _defaultColor & 0xff;
 
-		// set clear color
 		glClearColor((GLclampf)r/255,(GLclampf)g/255,(GLclampf)b/255,(GLclampf)a/255);
 
 		//set the right matrix values
@@ -285,15 +279,58 @@ namespace qsb
 			return 0;
 		}
 
+		//create ibo and vbo
+		glGenBuffers(1, &vertexBuffer);
+		glGenBuffers(1, &indexBuffer);
+
 		return 1;
 	
 	}
 
-	GLuint createShader(GLuint shaderType, const GLchar* shaderCode)
+	int drawBatch(Batch _b)
+	{
+		glUseProgram(_b.shaderProgram);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, _b.vbDataPointer * sizeof(GLfloat), _b.vertextData, GL_STATIC_DRAW);
+		
+		int i = _b.numAttributes;
+		while(i--)
+		{
+			glEnableVertexAttribArray(_b.attributes[i].location);
+			glVertexAttribPointer(_b.attributes[i].location, _b.attributes[i].dim, _b.attributes[i].type, GL_FALSE, 
+				_b.dataPerVertex * sizeof(GLfloat), 0);
+		}
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+		glDrawElements(GL_TRIANGLES, 4, GL_UNSIGNED_INT, 0);
+
+		//unbind etc
+
+		return 0;
+	}
+
+	int drawAllBatches()
+	{
+		int len = batchList.size();
+		int i = 0;
+		while(i < len)
+		{
+			Batch b = batchList[i];
+
+			drawBatch(b);
+
+			i++;
+		}
+
+		return 0;
+	}
+
+	GLuint createShader(GLuint _shaderType, const GLchar* shaderCode)
 	{
 		
 		// create and compile shader
-		GLuint shader = glCreateShader(shaderType);
+		GLuint shader = glCreateShader(_shaderType);
 		const GLchar* source[] = { shaderCode };
 		glShaderSource(shader,(GLsizei)1, source, 0);
 		glCompileShader(shader);

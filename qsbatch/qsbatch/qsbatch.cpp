@@ -76,6 +76,18 @@ int main(int argc, char* argv[])
 
 	SDL_Event e;
 
+	qsb::Batch b = qsb::createBatch(2, 4);
+		qsb::batch_setProgram(&b,
+			qsb::createProgram(
+				qsb::createShader(
+				GL_VERTEX_SHADER, 
+				"#version 130\nin vec2 LVertexPos2D; void main() { gl_Position = vec4( LVertexPos2D.x, LVertexPos2D.y, 0, 1 ); }"\
+				),
+				qsb::createShader(
+				GL_FRAGMENT_SHADER, 
+				"#version 130\nout vec4 LFragment; void main() { LFragment = vec4( 1.0, 1.0, 1.0, 1.0 ); }"
+				)));
+
 	bool running = true;
 	while(running)
 	{
@@ -86,6 +98,9 @@ int main(int argc, char* argv[])
 				running = false;	
 			}
 		}
+		
+		
+
 
 		glClear(GL_COLOR_BUFFER_BIT);
 

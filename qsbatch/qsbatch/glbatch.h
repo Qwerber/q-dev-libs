@@ -5,24 +5,57 @@
 
 namespace qsb
 {
-struct Batch;
-Batch createBatch();
-void batch_setProgram(GLuint _program);
+	struct VertexAttribute
+	{
+		GLint location;
+		GLint dim;
+		GLint start;
+		GLint skip;
+		GLenum type;
+	};
 
-int initGLBatch(int _screenWidth, int _screenHeight, int _defaultColor, SDL_Window* _window);
+	struct Batch
+	{
+	
+		GLuint dataPerVertex;
+		GLuint length;
 
-GLuint createShader(GLuint _shaderType, GLchar* _shaderCode);
-GLuint createProgram(GLuint _vertexShader, GLuint _fragmentShader);
+		GLuint shaderProgram;
+		GLint vertexLocation;
 
-// Once you set the screen dimensions once through initialization you cannot change them again
-int getScreenWidth();
-int getScreenHeight();
+		GLfloat* vertextData;
+		GLuint* indexData;
 
-int submitBatch(Batch _batch);
-int drawAllBatches();
-int display();
+		GLuint vbDataPointer;
+		GLuint ibDataPointer;
+		GLuint vertexCount;
 
-int cleanup();
+		VertexAttribute attributes[16];
+		int numAttributes;
+		
+	};
+
+	Batch createBatch(int _dataPerVertex, int _length);
+	void destroyBatch(Batch* _batch);
+	void batch_setProgram(Batch* _batch, GLuint _program);
+
+	int initGLBatch(int _screenWidth, int _screenHeight, int _defaultColor, SDL_Window* _window);
+
+	GLuint createShader(GLuint _shaderType, const GLchar* _shaderCode);
+	GLuint createProgram(GLuint _vertexShader, GLuint _fragmentShader);
+
+	// Once you set the screen dimensions once through initialization you cannot change them again
+	int getScreenWidth();
+	int getScreenHeight();
+
+	int pushBatch(Batch _batch);
+	int drawBatch(Batch _b);
+	int drawAllBatches();
+	int display();
+
+	int cleanup();
+
+	// debug functions
 
 
 }
