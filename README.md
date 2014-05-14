@@ -3,4 +3,4 @@ q-dev-libs
 
 Libraries for game development.
 
-(line)
+QuickSpriteBatch, the low level 2d graphics batching library to make developers lives easier while giving great control.
