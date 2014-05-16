@@ -8,6 +8,7 @@
 #include <SDL_opengl.h>
 #include <iostream>
 #include "glbatch.h"
+#define _DBG
 
 
 const int SCREENWIDTH = 800;
@@ -76,17 +77,34 @@ int main(int argc, char* argv[])
 
 	SDL_Event e;
 
-	qsb::Batch b = qsb::createBatch(2, 4);
-		qsb::batch_setProgram(&b,
-			qsb::createProgram(
-				qsb::createShader(
-				GL_VERTEX_SHADER, 
-				"#version 130\nin vec2 LVertexPos2D; void main() { gl_Position = vec4( LVertexPos2D.x, LVertexPos2D.y, 0, 1 ); }"\
-				),
-				qsb::createShader(
-				GL_FRAGMENT_SHADER, 
-				"#version 130\nout vec4 LFragment; void main() { LFragment = vec4( 1.0, 1.0, 1.0, 1.0 ); }"
-				)));
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	qsb::Batch b = qsb::createBatch(2, 6);
+	qsb::batch_setProgram(&b,
+		qsb::createProgram(
+			qsb::createShader(
+			GL_VERTEX_SHADER, 
+			"#version 130\nin vec2 LVertexPos2D; uniform mat4 gl_ModelViewMatrix; void main() { gl_Position = gl_ModelViewMatrix * vec4( LVertexPos2D.x, LVertexPos2D.y, 0, 1 ); }"\
+			),
+			qsb::createShader(
+			GL_FRAGMENT_SHADER, 
+			"#version 130\nout vec4 LFragment; void main() { LFragment = vec4( 1.0, 0.5, 1.0, 1.0 ); }"
+			)));
+
+	qsb::batch_generateAttributeData(&b, "LVertexPos2D{ff}");
+
+	qsb::batch_PrintAttributeData(&b);
+
+	qsb::batch_pushVertex(&b, 0, 0, 0);
+	qsb::batch_pushVertex(&b, 0, 111, 1);
+	qsb::batch_pushVertex(&b, 111, 0, 2);
+	qsb::batch_pushVertex(&b, 111, 0, 3);
+	qsb::batch_pushVertex(&b, 111, 111, 4);
+	qsb::batch_pushVertex(&b, 0, 111, 5);
+
+	qsb::drawBatch(b);
+
+	SDL_GL_SwapWindow(window);
 
 	bool running = true;
 	while(running)
@@ -99,10 +117,7 @@ int main(int argc, char* argv[])
 			}
 		}
 		
-		
-
-
-		glClear(GL_COLOR_BUFFER_BIT);
+		/*glClear(GL_COLOR_BUFFER_BIT);
 
 		glBegin(GL_QUADS);
 			glColor3f(1.0f,1.0f,0);
@@ -112,7 +127,7 @@ int main(int argc, char* argv[])
 			glVertex2i(0,110);
 		glEnd();
 
-		SDL_GL_SwapWindow(window);
+		SDL_GL_SwapWindow(window);*/
 
 	}
 

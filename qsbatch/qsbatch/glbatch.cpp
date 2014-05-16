@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#include <string.h>
 #include <GL\glew.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
@@ -8,9 +9,12 @@
 #include <stdlib.h>
 #include <vector>
 #include "glbatch.h"
+#include "utils.h"
 
 namespace qsb
 {
+	int OK = 0;
+	int FAIL = 1;
 
 	static SDL_Window* window;
 	static SDL_GLContext context;
@@ -95,14 +99,15 @@ namespace qsb
 
 	VertexAttribute createVA()
 	{
+
 		VertexAttribute ret;
 		ret.location = -1;
 		ret.dim = 1;
-		ret.skip = 0;
 		ret.start = 0;
 		ret.type = GL_FLOAT;
 
 		return ret;
+
 	}
 
 	Batch createBatch(int _dataPerVertex, int _length)
@@ -143,85 +148,64 @@ namespace qsb
 	
 	}
 
+	void batch_PrintAttributeData(Batch* _batch)
+	{
+		int i = _batch->numAttributes;
+		printf_s("shader: \n");
+		while (i--)
+		{
+			printf_s("location:%d | dimension:%d | type:%d | start:%d\n",
+					 _batch->attributes[i].location,
+					 _batch->attributes[i].dim,
+					 _batch->attributes[i].type,
+					 _batch->attributes[i].start);
+		}
+	}
+
+	// format: {attrib}fff{attrib2}ii.
+	//
+	// where: f is GLfloat
+	//        i is GLint
+
+	// TODO: Switch to glBindAttribLocation if possible
+	void batch_generateAttributeData(Batch* _batch, char* _data)
+	{
+		char* copy = _strdup(_data);
+
+		int ANAME = 0, ATYPES = 1, state = 0, dataSize = 0;
+		char* tok, *save;
+		
+		tok = strtok_s(copy, "{", &save);
+		while (tok)
+		{
+			if (ANAME == state)
+			{
+				_batch->attributes[_batch->numAttributes].location = glGetAttribLocation(_batch->shaderProgram, tok);;
+				tok = strtok_s(0, "}" ,&save);
+				state = ATYPES;
+			}
+			else if (ATYPES == state)
+			{
+				int size = strlen(tok);
+				_batch->attributes[_batch->numAttributes].dim = size;
+				_batch->attributes[_batch->numAttributes].type = (tok[0] == 'i') ? GL_INT : GL_FLOAT;
+				_batch->attributes[_batch->numAttributes].start = dataSize;
+				dataSize += size;
+				_batch->numAttributes++;
+
+				tok = strtok_s(0, "{", &save);
+				state = ANAME;
+			}
+			
+		}
+	}
+
 	int pushBatch(Batch _batch)
 	{
 		batchList.push_back(_batch);
 		numBatches ++;
 		return batchList.size() - 1;
 	}
-
-#pragma region "push functions"
-
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLuint _i1)
-	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
-	}
-
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLuint _i1)
-	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->vertextData[_batch->vbDataPointer++] = _y;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
-	}
-
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLuint _i1)
-	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->vertextData[_batch->vbDataPointer++] = _y;
-		_batch->vertextData[_batch->vbDataPointer++] = _z;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
-	}
-
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLuint _i1)
-	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->vertextData[_batch->vbDataPointer++] = _y;
-		_batch->vertextData[_batch->vbDataPointer++] = _z;
-		_batch->vertextData[_batch->vbDataPointer++] = _w;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
-	}
-
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLuint _i1)
-	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->vertextData[_batch->vbDataPointer++] = _y;
-		_batch->vertextData[_batch->vbDataPointer++] = _z;
-		_batch->vertextData[_batch->vbDataPointer++] = _w;
-		_batch->vertextData[_batch->vbDataPointer++] = _u;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
-	}
-
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLfloat _v, GLuint _i1)
-	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->vertextData[_batch->vbDataPointer++] = _y;
-		_batch->vertextData[_batch->vbDataPointer++] = _z;
-		_batch->vertextData[_batch->vbDataPointer++] = _w;
-		_batch->vertextData[_batch->vbDataPointer++] = _u;
-		_batch->vertextData[_batch->vbDataPointer++] = _v;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
-	}
-
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLfloat _v, GLfloat _t, GLuint _i1)
-	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->vertextData[_batch->vbDataPointer++] = _y;
-		_batch->vertextData[_batch->vbDataPointer++] = _z;
-		_batch->vertextData[_batch->vbDataPointer++] = _w;
-		_batch->vertextData[_batch->vbDataPointer++] = _u;
-		_batch->vertextData[_batch->vbDataPointer++] = _v;
-		_batch->vertextData[_batch->vbDataPointer++] = _t;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
-	}
-#pragma endregion
 #pragma endregion
 
 	int initGLBatch(int _screenWidth, int _screenHeight, int _defaultColor, SDL_Window* _window)
@@ -290,9 +274,27 @@ namespace qsb
 	int drawBatch(Batch _b)
 	{
 		glUseProgram(_b.shaderProgram);
+
+		printf_s("%d\n", _b.shaderProgram);
 		
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-		glBufferData(GL_ARRAY_BUFFER, _b.vbDataPointer * sizeof(GLfloat), _b.vertextData, GL_STATIC_DRAW);
+
+		{int i = 12;
+		while (i--)
+		{
+			printf("%f\n", _b.vertextData[i]);
+		}}
+
+		glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), _b.vertextData, GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(GLuint), _b.indexData, GL_STATIC_DRAW);
+
+		{int i = 6;
+		while (i--)
+		{
+			printf("i:%i\n", _b.indexData[i]);
+		}}
 		
 		int i = _b.numAttributes;
 		while(i--)
@@ -303,7 +305,7 @@ namespace qsb
 		}
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-		glDrawElements(GL_TRIANGLES, 4, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		//unbind etc
 
