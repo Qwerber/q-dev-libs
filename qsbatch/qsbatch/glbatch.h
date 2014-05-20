@@ -5,8 +5,8 @@
 
 namespace qsb
 {
-	extern int OK;
-	extern int FAIL;
+	extern const int OK;
+	extern const int FAIL;
 
 	struct VertexAttribute
 	{
@@ -38,7 +38,7 @@ namespace qsb
 		
 	};
 
-	Batch createBatch(int _dataPerVertex, int _length);
+	Batch* createBatch(int _dataPerVertex, int _length);
 	void destroyBatch(Batch* _batch);
 	void batch_setProgram(Batch* _batch, GLuint _program);
 	void batch_generateAttributeData(Batch* _batch, char* _data);
@@ -46,74 +46,44 @@ namespace qsb
 
 #pragma region "push functions"
 
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLuint _i1)
+	inline void batch_pushIndex(Batch* _batch, GLuint _i)
 	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
+		_batch->indexData[_batch->ibDataPointer ++] = _i;
 	}
 
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLuint _i1)
+	inline void batch_pushVertex(Batch* _batch, GLfloat _x)
 	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->vertextData[_batch->vbDataPointer++] = _y;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
+		_batch->vertextData[_batch->vbDataPointer ++] = _x;
+		_batch->vertexCount ++;
 	}
 
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLuint _i1)
+	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y)
 	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->vertextData[_batch->vbDataPointer++] = _y;
-		_batch->vertextData[_batch->vbDataPointer++] = _z;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
+		_batch->vertextData[_batch->vbDataPointer ++] = _x;
+		_batch->vertextData[_batch->vbDataPointer ++] = _y;
+		_batch->vertexCount ++;
 	}
 
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLuint _i1)
+	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w)
 	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->vertextData[_batch->vbDataPointer++] = _y;
-		_batch->vertextData[_batch->vbDataPointer++] = _z;
-		_batch->vertextData[_batch->vbDataPointer++] = _w;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
+		_batch->vertextData[_batch->vbDataPointer ++] = _x;
+		_batch->vertextData[_batch->vbDataPointer ++] = _y;
+		_batch->vertextData[_batch->vbDataPointer ++] = _z;
+		_batch->vertextData[_batch->vbDataPointer ++] = _w;
+		_batch->vertexCount ++;
 	}
 
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLuint _i1)
+	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLfloat _v, GLfloat _s, GLfloat _t)
 	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->vertextData[_batch->vbDataPointer++] = _y;
-		_batch->vertextData[_batch->vbDataPointer++] = _z;
-		_batch->vertextData[_batch->vbDataPointer++] = _w;
-		_batch->vertextData[_batch->vbDataPointer++] = _u;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
-	}
-
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLfloat _v, GLuint _i1)
-	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->vertextData[_batch->vbDataPointer++] = _y;
-		_batch->vertextData[_batch->vbDataPointer++] = _z;
-		_batch->vertextData[_batch->vbDataPointer++] = _w;
-		_batch->vertextData[_batch->vbDataPointer++] = _u;
-		_batch->vertextData[_batch->vbDataPointer++] = _v;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
-	}
-
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLfloat _v, GLfloat _t, GLuint _i1)
-	{
-		_batch->vertextData[_batch->vbDataPointer++] = _x;
-		_batch->vertextData[_batch->vbDataPointer++] = _y;
-		_batch->vertextData[_batch->vbDataPointer++] = _z;
-		_batch->vertextData[_batch->vbDataPointer++] = _w;
-		_batch->vertextData[_batch->vbDataPointer++] = _u;
-		_batch->vertextData[_batch->vbDataPointer++] = _v;
-		_batch->vertextData[_batch->vbDataPointer++] = _t;
-		_batch->indexData[_batch->ibDataPointer++] = _i1;
-		_batch->vertexCount++;
+		_batch->vertextData[_batch->vbDataPointer ++] = _x;
+		_batch->vertextData[_batch->vbDataPointer ++] = _y;
+		_batch->vertextData[_batch->vbDataPointer ++] = _z;
+		_batch->vertextData[_batch->vbDataPointer ++] = _w;
+		_batch->vertextData[_batch->vbDataPointer ++] = _u;
+		_batch->vertextData[_batch->vbDataPointer ++] = _v;
+		_batch->vertextData[_batch->vbDataPointer ++] = _s;
+		_batch->vertextData[_batch->vbDataPointer ++] = _t;
+		_batch->vertexCount ++;
 	}
 #pragma endregion
 
@@ -126,8 +96,8 @@ namespace qsb
 	int getScreenWidth();
 	int getScreenHeight();
 
-	int pushBatch(Batch _batch);
-	int drawBatch(Batch _b);
+	int pushBatch(Batch* _batch);
+	int drawBatch(Batch* _b);
 	int drawAllBatches();
 	int display();
 

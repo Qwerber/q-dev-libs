@@ -9,26 +9,30 @@
 #include <stdlib.h>
 #include <vector>
 #include "glbatch.h"
-#include "utils.h"
 
 namespace qsb
 {
-	int OK = 0;
-	int FAIL = 1;
+	// Constants for function success/fail
+	const int OK = 0;
+	const int FAIL = 1;
 
+	// SDL objects
 	static SDL_Window* window;
 	static SDL_GLContext context;
 
+	// Properties
 	static int screenWidth;
 	static int screenHeight;
 	
-	static std::vector<Batch> batchList;
+	// Batch stuff
+	static std::vector<Batch*> batchList;
 	static int numBatches;
 
+	// OpenGL objects
 	static GLuint vertexBuffer;
 	static GLuint indexBuffer;
 
-#pragma region "internal"
+#pragma region "lazyfoo functions"
 	void printShaderLog( GLuint shader )
 	{
 		//Make sure name is shader
@@ -94,9 +98,10 @@ namespace qsb
 	}
 #pragma endregion
 
-
 #pragma region "batch funcs"
 
+
+	// create vertexAttribute
 	VertexAttribute createVA()
 	{
 
@@ -110,23 +115,23 @@ namespace qsb
 
 	}
 
-	Batch createBatch(int _dataPerVertex, int _length)
+	Batch* createBatch(int _dataPerVertex, int _length)
 	{
 		
-		Batch batch = {};
+		Batch* batch = (Batch*)malloc(sizeof(Batch));
 		
-		batch.dataPerVertex = _dataPerVertex;
-		batch.length = _length;
+		batch->dataPerVertex = _dataPerVertex;
+		batch->length = _length;
 		
-		batch.shaderProgram = 0;
+		batch->shaderProgram = 0;
 		
-		batch.vertextData = (GLfloat*) malloc(_length * _dataPerVertex * sizeof(GLfloat));
-		batch.indexData = (GLuint*) malloc(_length * sizeof(GLuint));
+		batch->vertextData = (GLfloat*) malloc(_length * _dataPerVertex * sizeof(GLfloat));
+		batch->indexData = (GLuint*) malloc(_length * sizeof(GLuint));
 
-		batch.vbDataPointer = 0;
-		batch.ibDataPointer = 0;
+		batch->vbDataPointer = 0;
+		batch->ibDataPointer = 0;
 
-		batch.numAttributes = 0;
+		batch->numAttributes = 0;
 
 		return batch;
 	
@@ -200,7 +205,7 @@ namespace qsb
 		}
 	}
 
-	int pushBatch(Batch _batch)
+	int pushBatch(Batch* _batch)
 	{
 		batchList.push_back(_batch);
 		numBatches ++;
@@ -218,7 +223,7 @@ namespace qsb
 		screenHeight = _screenHeight;
 		window = _window;
 
-		batchList = std::vector<Batch>();
+		batchList = std::vector<Batch*>();
 		numBatches = 0;
 
 		////////////////////
@@ -243,6 +248,8 @@ namespace qsb
 		int g = _defaultColor >> 16 & 0xff;
 		int b = _defaultColor >> 8 & 0xff;
 		int a = _defaultColor & 0xff;
+
+		glEnable(GL_TEXTURE_2D);
 
 		glClearColor((GLclampf)r/255,(GLclampf)g/255,(GLclampf)b/255,(GLclampf)a/255);
 
@@ -271,44 +278,41 @@ namespace qsb
 	
 	}
 
-	int drawBatch(Batch _b)
+	// draw a single batch 
+	int drawBatch(Batch* _b)
 	{
-		glUseProgram(_b.shaderProgram);
-
-		printf_s("%d\n", _b.shaderProgram);
+		glUseProgram(_b->shaderProgram);
 		
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 
-		{int i = 12;
-		while (i--)
-		{
-			printf("%f\n", _b.vertextData[i]);
-		}}
-
-		glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), _b.vertextData, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, _b->vbDataPointer * sizeof(GLfloat), _b->vertextData, GL_STATIC_DRAW);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(GLuint), _b.indexData, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, _b->ibDataPointer * sizeof(GLuint), _b->indexData, GL_STATIC_DRAW);
 
-		{int i = 6;
-		while (i--)
 		{
-			printf("i:%i\n", _b.indexData[i]);
-		}}
-		
-		int i = _b.numAttributes;
-		while(i--)
-		{
-			glEnableVertexAttribArray(_b.attributes[i].location);
-			glVertexAttribPointer(_b.attributes[i].location, _b.attributes[i].dim, _b.attributes[i].type, GL_FALSE, 
-				_b.dataPerVertex * sizeof(GLfloat), 0);
+			int i = _b->numAttributes;
+			while(i--)
+			{
+				glEnableVertexAttribArray(_b->attributes[i].location);
+				glVertexAttribPointer(_b->attributes[i].location, _b->attributes[i].dim, _b->attributes[i].type, GL_FALSE, 
+					_b->dataPerVertex * sizeof(GLfloat), 0);
+			}
 		}
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, _b->ibDataPointer, GL_UNSIGNED_INT, 0);
 
-		//unbind etc
+		{
+			int i = _b->numAttributes;
+			while(i--)
+			{
+				glDisableVertexAttribArray(_b->attributes[i].location);
+			}
+		}
 
+		glUseProgram(0);
+		
 		return 0;
 	}
 
@@ -318,7 +322,7 @@ namespace qsb
 		int i = 0;
 		while(i < len)
 		{
-			Batch b = batchList[i];
+			Batch* b = batchList[i];
 
 			drawBatch(b);
 

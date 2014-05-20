@@ -8,8 +8,7 @@
 #include <SDL_opengl.h>
 #include <iostream>
 #include "glbatch.h"
-#define _DBG
-
+#include "Assets.h"
 
 const int SCREENWIDTH = 800;
 const int SCREENHEIGHT = 600;
@@ -37,36 +36,6 @@ void initViewport(int _width, int _height)
 
 int main(int argc, char* argv[])
 {
-	/*SDL_Window* window = 0;
-	SDL_Surface* screen = 0;
-	window = SDL_CreateWindow("ASD",100,100,SCREENWIDTH,SCREENHEIGHT,SDL_WINDOW_SHOWN);
-	screen = SDL_GetWindowSurface(window);
-	SDL_Delay(1000);
-
-	SDL_Event e;
-	bool running = true;
-	while(running)
-	{
-		while(SDL_PollEvent(&e) != 0)
-		{
-			if(e.type == SDL_QUIT)
-			{
-				running = false;	
-			}
-		}
-
-		SDL_Rect r;
-		r.x= r.y = 0;
-		r.w = SCREENWIDTH;
-		r.h = SCREENHEIGHT;
-
-		SDL_FillRect(screen, &r, 0xffff0000);
-		SDL_UpdateWindowSurface(window);
-	}
-
-	SDL_DestroyWindow(window);
-	SDL_Quit();*/ 
-
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_Window* window;
 	SDL_GLContext context;
@@ -75,16 +44,27 @@ int main(int argc, char* argv[])
 
 	qsb::initGLBatch(SCREENWIDTH, SCREENHEIGHT, 0x660000ff,window);
 
+	printf("err 1: %d", glGetError());
+	glEnable(GL_TEXTURE_2D);
+	qass::loadTexture("Forest tileset.png");
+
+	printf("err: %d", glGetError());
+
 	SDL_Event e;
 
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	qsb::Batch b = qsb::createBatch(2, 6);
+	qsb::Batch b = *qsb::createBatch(2, 6);
 	qsb::batch_setProgram(&b,
 		qsb::createProgram(
 			qsb::createShader(
 			GL_VERTEX_SHADER, 
-			"#version 130\nin vec2 LVertexPos2D; uniform mat4 gl_ModelViewMatrix; void main() { gl_Position = gl_ModelViewMatrix * vec4( LVertexPos2D.x, LVertexPos2D.y, 0, 1 ); }"\
+			"#version 130\n"
+			"in vec2 LVertexPos2D;"
+			"uniform mat4 gl_ModelViewMatrix;"
+			"void main() { "
+			"  gl_Position = gl_ModelViewMatrix * vec4( LVertexPos2D.x, LVertexPos2D.y, 0, 1 ); "
+			"}"
 			),
 			qsb::createShader(
 			GL_FRAGMENT_SHADER, 
@@ -95,14 +75,20 @@ int main(int argc, char* argv[])
 
 	qsb::batch_PrintAttributeData(&b);
 
-	qsb::batch_pushVertex(&b, 0, 0, 0);
-	qsb::batch_pushVertex(&b, 0, 111, 1);
-	qsb::batch_pushVertex(&b, 111, 0, 2);
-	qsb::batch_pushVertex(&b, 111, 0, 3);
-	qsb::batch_pushVertex(&b, 111, 111, 4);
-	qsb::batch_pushVertex(&b, 0, 111, 5);
+	qsb::batch_pushVertex(&b, 0, 0);
+	qsb::batch_pushIndex(&b, 0);
+	qsb::batch_pushVertex(&b, 0, 111);
+	qsb::batch_pushIndex(&b, 1);
+	qsb::batch_pushVertex(&b, 111, 0);
+	qsb::batch_pushIndex(&b, 2);
+	qsb::batch_pushVertex(&b, 111, 0);
+	qsb::batch_pushIndex(&b, 3);
+	qsb::batch_pushVertex(&b, 111, 111);
+	qsb::batch_pushIndex(&b, 4);
+	qsb::batch_pushVertex(&b, 0, 111);
+	qsb::batch_pushIndex(&b, 5);
 
-	qsb::drawBatch(b);
+	qsb::drawBatch(&b);
 
 	SDL_GL_SwapWindow(window);
 
@@ -116,21 +102,9 @@ int main(int argc, char* argv[])
 				running = false;	
 			}
 		}
-		
-		/*glClear(GL_COLOR_BUFFER_BIT);
-
-		glBegin(GL_QUADS);
-			glColor3f(1.0f,1.0f,0);
-			glVertex2i(0,0);
-			glVertex2i(110,0);
-			glVertex2i(110,110);
-			glVertex2i(0,110);
-		glEnd();
-
-		SDL_GL_SwapWindow(window);*/
 
 	}
-
+	
 	return 0;
 }
 
