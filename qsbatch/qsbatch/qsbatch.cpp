@@ -43,12 +43,8 @@ int main(int argc, char* argv[])
 	window = SDL_CreateWindow("title",110,110,SCREENWIDTH,SCREENHEIGHT,SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
 
 	qsb::initGLBatch(SCREENWIDTH, SCREENHEIGHT, 0x660000ff,window);
-
-	printf("err 1: %d", glGetError());
-	glEnable(GL_TEXTURE_2D);
+	
 	qass::loadTexture("Forest tileset.png");
-
-	printf("err: %d", glGetError());
 
 	SDL_Event e;
 
