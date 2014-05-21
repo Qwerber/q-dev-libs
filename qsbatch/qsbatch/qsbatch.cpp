@@ -8,11 +8,11 @@
 #include <SDL_opengl.h>
 #include <iostream>
 #include "glbatch.h"
+#include "Emitter.h"
 #include "Assets.h"
 
 const int SCREENWIDTH = 800;
 const int SCREENHEIGHT = 600;
-
 
 void initGL()
 {
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 			),
 			qsb::createShader(
 			GL_FRAGMENT_SHADER, 
-			"#version 130\nout vec4 LFragment; void main() { LFragment = vec4( 1.0, 0.5, 1.0, 1.0 ); }"
+			"#version 130\nout vec4 LFragment; void main() { gl_FragColor  = vec4( 1.0, 0.5, 1.0, 0.8 ); }"
 			)));
 
 	qsb::batch_generateAttributeData(&b, "LVertexPos2D{ff}");
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 
 	qsb::batch_pushVertex(&b, 0, 0);
 	qsb::batch_pushIndex(&b, 0);
-	qsb::batch_pushVertex(&b, 0, 111);
+	qsb::batch_pushVertex(&b, 0, 130);
 	qsb::batch_pushIndex(&b, 1);
 	qsb::batch_pushVertex(&b, 111, 0);
 	qsb::batch_pushIndex(&b, 2);
@@ -84,9 +84,15 @@ int main(int argc, char* argv[])
 	qsb::batch_pushVertex(&b, 0, 111);
 	qsb::batch_pushIndex(&b, 5);
 
-	qsb::drawBatch(&b);
+	//qsb::drawBatch(&b);
+
+	kc8::Emitter2D* em = kc8::createEmitter(100);
+
+	kc8::emitParticles(em, 2, { 200, 200 }, { 1, 1 });
+	kc8::renderEmitter(em);
 
 	SDL_GL_SwapWindow(window);
+
 
 	bool running = true;
 	while(running)

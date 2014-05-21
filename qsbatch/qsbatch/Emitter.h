@@ -49,4 +49,5 @@ namespace kc8
 	void emitParticles(Emitter2D* _emitter, int _numParticles, Vector2D _position, Vector2D _velocity);
 	void pushParticle(Emitter2D* _emitter, Vector2D _position, Vector2D _velocity);
 	void updateEmitter(Emitter2D* _emitter);
+	void renderEmitter(Emitter2D* _emitter);
 }
