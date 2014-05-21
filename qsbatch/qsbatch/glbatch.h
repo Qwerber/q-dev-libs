@@ -54,7 +54,6 @@ namespace qsb
 	inline void batch_pushVertex(Batch* _batch, GLfloat _x)
 	{
 		_batch->vertextData[_batch->vbDataPointer ++] = _x;
-		_batch->vertexCount ++;
 	}
 
 	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y)

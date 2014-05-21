@@ -50,46 +50,72 @@ int main(int argc, char* argv[])
 
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	qsb::Batch b = *qsb::createBatch(2, 6);
+	qsb::Batch b = *qsb::createBatch(5, 6);
 	qsb::batch_setProgram(&b,
 		qsb::createProgram(
 			qsb::createShader(
 			GL_VERTEX_SHADER, 
 			"#version 130\n"
-			"in vec2 LVertexPos2D;"
+			"in vec3 LVertexPos2D;"
+			"in vec3 c;"
+			"out vec3 gs;"
 			"uniform mat4 gl_ModelViewMatrix;"
 			"void main() { "
+			"  gs = c;"
 			"  gl_Position = gl_ModelViewMatrix * vec4( LVertexPos2D.x, LVertexPos2D.y, 0, 1 ); "
 			"}"
 			),
 			qsb::createShader(
 			GL_FRAGMENT_SHADER, 
-			"#version 130\nout vec4 LFragment; void main() { gl_FragColor  = vec4( 1.0, 0.5, 1.0, 0.8 ); }"
+			"#version 130\nin vec3 gs; out vec4 LFragment; void main() { LFragment  = vec4( gs.x, gs.y, gs.z, 1 ); }"
 			)));
 
-	qsb::batch_generateAttributeData(&b, "LVertexPos2D{ff}");
+	qsb::batch_generateAttributeData(&b, "LVertexPos2D{ff}c{fff}");
 
 	qsb::batch_PrintAttributeData(&b);
 
 	qsb::batch_pushVertex(&b, 0, 0);
+	qsb::batch_pushVertex(&b, 1);
+	qsb::batch_pushVertex(&b, 0);
+	qsb::batch_pushVertex(&b, 0);
 	qsb::batch_pushIndex(&b, 0);
-	qsb::batch_pushVertex(&b, 0, 130);
-	qsb::batch_pushIndex(&b, 1);
-	qsb::batch_pushVertex(&b, 111, 0);
-	qsb::batch_pushIndex(&b, 2);
-	qsb::batch_pushVertex(&b, 111, 0);
-	qsb::batch_pushIndex(&b, 3);
-	qsb::batch_pushVertex(&b, 111, 111);
-	qsb::batch_pushIndex(&b, 4);
+	
 	qsb::batch_pushVertex(&b, 0, 111);
+	qsb::batch_pushVertex(&b, 0);
+	qsb::batch_pushVertex(&b, 0);
+	qsb::batch_pushVertex(&b, 1);
+	qsb::batch_pushIndex(&b, 1);
+	
+	qsb::batch_pushVertex(&b, 111, 0);
+	qsb::batch_pushVertex(&b, 0);
+	qsb::batch_pushVertex(&b, 1);
+	qsb::batch_pushVertex(&b, 0);
+	qsb::batch_pushIndex(&b, 2);
+	
+	qsb::batch_pushVertex(&b, 111, 0);
+	qsb::batch_pushVertex(&b, 0);
+	qsb::batch_pushVertex(&b, 0);
+	qsb::batch_pushVertex(&b, 1);
+	qsb::batch_pushIndex(&b, 3);
+	
+	qsb::batch_pushVertex(&b, 111, 111);
+	qsb::batch_pushVertex(&b, 1);
+	qsb::batch_pushVertex(&b, 0);
+	qsb::batch_pushVertex(&b, 0);
+	qsb::batch_pushIndex(&b, 4);
+	
+	qsb::batch_pushVertex(&b, 0, 111);
+	qsb::batch_pushVertex(&b, 0);
+	qsb::batch_pushVertex(&b, 1);
+	qsb::batch_pushVertex(&b, 0);
 	qsb::batch_pushIndex(&b, 5);
 
-	//qsb::drawBatch(&b);
+	qsb::drawBatch(&b);
 
-	kc8::Emitter2D* em = kc8::createEmitter(100);
+	/*kc8::Emitter2D* em = kc8::createEmitter(100);
 
 	kc8::emitParticles(em, 2, { 200, 200 }, { 1, 1 });
-	kc8::renderEmitter(em);
+	kc8::renderEmitter(em);*/
 
 	SDL_GL_SwapWindow(window);
 

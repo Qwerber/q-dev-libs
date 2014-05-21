@@ -296,7 +296,7 @@ namespace qsb
 			{
 				glEnableVertexAttribArray(_b->attributes[i].location);
 				glVertexAttribPointer(_b->attributes[i].location, _b->attributes[i].dim, _b->attributes[i].type, GL_FALSE, 
-					_b->dataPerVertex * sizeof(GLfloat), 0);
+									  _b->dataPerVertex * sizeof(GLfloat), (void*)(_b->attributes[i].start * 4));
 			}
 		}
 
