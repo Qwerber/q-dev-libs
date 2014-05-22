@@ -29,17 +29,19 @@ namespace qsb
 		GLfloat* vertextData;
 		GLuint* indexData;
 
-		GLuint vbDataPointer;
-		GLuint ibDataPointer;
+		GLfloat* vbDataPointer;
+		GLuint* ibDataPointer;
 		GLuint vertexCount;
 
 		VertexAttribute attributes[16];
 		int numAttributes;
 		
+		GLuint indexValue;
 	};
 
 	Batch* createBatch(int _dataPerVertex, int _length);
 	void destroyBatch(Batch* _batch);
+	void batch_reset(Batch* _batch);
 	void batch_setProgram(Batch* _batch, GLuint _program);
 	void batch_generateAttributeData(Batch* _batch, char* _data);
 	void batch_PrintAttributeData(Batch* _batch);
@@ -48,42 +50,27 @@ namespace qsb
 
 	inline void batch_pushIndex(Batch* _batch, GLuint _i)
 	{
-		_batch->indexData[_batch->ibDataPointer ++] = _i;
+		//_batch->indexData[_batch->ibDataPointer ++] = _i;
+		*(_batch->ibDataPointer++) = _i;
 	}
 
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x)
+	inline void batch_pushVertData(Batch* _batch, GLfloat _x)
 	{
-		_batch->vertextData[_batch->vbDataPointer ++] = _x;
+		//_batch->vertextData[_batch->vbDataPointer ++] = _x;
+		*(_batch->vbDataPointer++) = _x;
 	}
 
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y)
+	inline void batch_pushQuadIndex(Batch* _batch)
 	{
-		_batch->vertextData[_batch->vbDataPointer ++] = _x;
-		_batch->vertextData[_batch->vbDataPointer ++] = _y;
-		_batch->vertexCount ++;
+		batch_pushIndex(_batch, _batch->indexValue++);
+		batch_pushIndex(_batch, _batch->indexValue++);
+		batch_pushIndex(_batch, _batch->indexValue);
+		batch_pushIndex(_batch, --_batch->indexValue);
+		batch_pushIndex(_batch, ++_batch->indexValue);
+		batch_pushIndex(_batch, ++_batch->indexValue);
+		_batch->indexValue++;
 	}
 
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w)
-	{
-		_batch->vertextData[_batch->vbDataPointer ++] = _x;
-		_batch->vertextData[_batch->vbDataPointer ++] = _y;
-		_batch->vertextData[_batch->vbDataPointer ++] = _z;
-		_batch->vertextData[_batch->vbDataPointer ++] = _w;
-		_batch->vertexCount ++;
-	}
-
-	inline void batch_pushVertex(Batch* _batch, GLfloat _x, GLfloat _y, GLfloat _z, GLfloat _w, GLfloat _u, GLfloat _v, GLfloat _s, GLfloat _t)
-	{
-		_batch->vertextData[_batch->vbDataPointer ++] = _x;
-		_batch->vertextData[_batch->vbDataPointer ++] = _y;
-		_batch->vertextData[_batch->vbDataPointer ++] = _z;
-		_batch->vertextData[_batch->vbDataPointer ++] = _w;
-		_batch->vertextData[_batch->vbDataPointer ++] = _u;
-		_batch->vertextData[_batch->vbDataPointer ++] = _v;
-		_batch->vertextData[_batch->vbDataPointer ++] = _s;
-		_batch->vertextData[_batch->vbDataPointer ++] = _t;
-		_batch->vertexCount ++;
-	}
 #pragma endregion
 
 	int initGLBatch(int _screenWidth, int _screenHeight, int _defaultColor, SDL_Window* _window);

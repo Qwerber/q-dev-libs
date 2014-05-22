@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <vector>
+#include <Windows.h>
 #include "glbatch.h"
 
 namespace qsb
@@ -128,11 +129,11 @@ namespace qsb
 		batch->vertextData = (GLfloat*) malloc(_length * _dataPerVertex * sizeof(GLfloat));
 		batch->indexData = (GLuint*) malloc(_length * sizeof(GLuint));
 
-		batch->vbDataPointer = 0;
-		batch->ibDataPointer = 0;
+		batch->vbDataPointer = batch->vertextData;
+		batch->ibDataPointer = batch->indexData;
+		batch->indexValue = 0;
 
 		batch->numAttributes = 0;
-
 		return batch;
 	
 	}
@@ -144,6 +145,14 @@ namespace qsb
 		free(_batch->vertextData);
 		free(_batch->indexData);
 
+	}
+
+	void batch_reset(Batch* _batch)
+	{
+		_batch->vbDataPointer = _batch->vertextData;
+		_batch->ibDataPointer = _batch->indexData;
+		_batch->vertexCount = 0;
+		_batch->indexValue = 0;
 	}
 
 	void batch_setProgram(Batch* _batch, GLuint _program)
@@ -270,6 +279,9 @@ namespace qsb
 			return 0;
 		}
 
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		//create ibo and vbo
 		glGenBuffers(1, &vertexBuffer);
 		glGenBuffers(1, &indexBuffer);
@@ -281,27 +293,39 @@ namespace qsb
 	// draw a single batch 
 	int drawBatch(Batch* _b)
 	{
+		unsigned int t = GetTickCount();
 		glUseProgram(_b->shaderProgram);
 		
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 
-		glBufferData(GL_ARRAY_BUFFER, _b->vbDataPointer * sizeof(GLfloat), _b->vertextData, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, (GLuint)(_b->vbDataPointer - _b->vertextData) * sizeof(GLfloat), _b->vertextData, GL_STATIC_DRAW);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, _b->ibDataPointer * sizeof(GLuint), _b->indexData, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLuint)(_b->ibDataPointer - _b->indexData) * sizeof(GLuint), _b->indexData, GL_STATIC_DRAW);
+		//printf("bufferdata: %u\n", GetTickCount() - t);
 
+		t = GetTickCount();
 		{
 			int i = _b->numAttributes;
 			while(i--)
 			{
 				glEnableVertexAttribArray(_b->attributes[i].location);
-				glVertexAttribPointer(_b->attributes[i].location, _b->attributes[i].dim, _b->attributes[i].type, GL_FALSE, 
-									  _b->dataPerVertex * sizeof(GLfloat), (void*)(_b->attributes[i].start * 4));
+				glVertexAttribPointer(_b->attributes[i].location, 
+									  _b->attributes[i].dim,
+									  _b->attributes[i].type, 
+									  GL_FALSE,
+									  _b->dataPerVertex * sizeof(GLfloat), 
+									  (void*)(_b->attributes[i].start * sizeof(GLfloat)));
 			}
 		}
+		//printf("attrib: %u\n", GetTickCount() - t);
+
+		t = GetTickCount();
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-		glDrawElements(GL_TRIANGLES, _b->ibDataPointer, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, (GLuint)(_b->ibDataPointer - _b->indexData), GL_UNSIGNED_INT, 0);
+
+		//printf("draw: %u\n", GetTickCount() - t);
 
 		{
 			int i = _b->numAttributes;
@@ -310,6 +334,8 @@ namespace qsb
 				glDisableVertexAttribArray(_b->attributes[i].location);
 			}
 		}
+
+
 
 		glUseProgram(0);
 		

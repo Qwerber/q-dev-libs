@@ -10,6 +10,9 @@
 #include "glbatch.h"
 #include "Emitter.h"
 #include "Assets.h"
+#include <Windows.h>
+#include <time.h>
+#include <stdlib.h>
 
 const int SCREENWIDTH = 800;
 const int SCREENHEIGHT = 600;
@@ -19,7 +22,7 @@ void initGL()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 
-	glClearColor(1.0f,0.0f,1.0f,1.0f);
+	glClearColor(1.0f,1.0f,1.0f,1.0f);
 }
 
 void initViewport(int _width, int _height)
@@ -42,13 +45,11 @@ int main(int argc, char* argv[])
 	
 	window = SDL_CreateWindow("title",110,110,SCREENWIDTH,SCREENHEIGHT,SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
 
-	qsb::initGLBatch(SCREENWIDTH, SCREENHEIGHT, 0x660000ff,window);
+	qsb::initGLBatch(SCREENWIDTH, SCREENHEIGHT, 0x000000ff,window);
 	
 	qass::loadTexture("Forest tileset.png");
 
 	SDL_Event e;
-
-	glClear(GL_COLOR_BUFFER_BIT);
 
 	qsb::Batch b = *qsb::createBatch(5, 6);
 	qsb::batch_setProgram(&b,
@@ -56,7 +57,7 @@ int main(int argc, char* argv[])
 			qsb::createShader(
 			GL_VERTEX_SHADER, 
 			"#version 130\n"
-			"in vec3 LVertexPos2D;"
+			"in vec2 LVertexPos2D;"
 			"in vec3 c;"
 			"out vec3 gs;"
 			"uniform mat4 gl_ModelViewMatrix;"
@@ -74,52 +75,60 @@ int main(int argc, char* argv[])
 
 	qsb::batch_PrintAttributeData(&b);
 
-	qsb::batch_pushVertex(&b, 0, 0);
-	qsb::batch_pushVertex(&b, 1);
-	qsb::batch_pushVertex(&b, 0);
-	qsb::batch_pushVertex(&b, 0);
+	qsb::batch_pushVertData(&b, 0);
+	qsb::batch_pushVertData(&b, 0);
+	qsb::batch_pushVertData(&b, 1);
+	qsb::batch_pushVertData(&b, 0);
+	qsb::batch_pushVertData(&b, 0);
 	qsb::batch_pushIndex(&b, 0);
 	
-	qsb::batch_pushVertex(&b, 0, 111);
-	qsb::batch_pushVertex(&b, 0);
-	qsb::batch_pushVertex(&b, 0);
-	qsb::batch_pushVertex(&b, 1);
+	qsb::batch_pushVertData(&b, 0);
+	qsb::batch_pushVertData(&b, 111);
+	qsb::batch_pushVertData(&b, 0);
+	qsb::batch_pushVertData(&b, 0);
+	qsb::batch_pushVertData(&b, 1);
 	qsb::batch_pushIndex(&b, 1);
 	
-	qsb::batch_pushVertex(&b, 111, 0);
-	qsb::batch_pushVertex(&b, 0);
-	qsb::batch_pushVertex(&b, 1);
-	qsb::batch_pushVertex(&b, 0);
+	qsb::batch_pushVertData(&b, 111);
+	qsb::batch_pushVertData(&b, 0);
+	qsb::batch_pushVertData(&b, 0);
+	qsb::batch_pushVertData(&b, 1);
+	qsb::batch_pushVertData(&b, 0);
 	qsb::batch_pushIndex(&b, 2);
 	
-	qsb::batch_pushVertex(&b, 111, 0);
-	qsb::batch_pushVertex(&b, 0);
-	qsb::batch_pushVertex(&b, 0);
-	qsb::batch_pushVertex(&b, 1);
+	qsb::batch_pushVertData(&b, 111);
+	qsb::batch_pushVertData(&b, 0);
+	qsb::batch_pushVertData(&b, 0);
+	qsb::batch_pushVertData(&b, 0);
+	qsb::batch_pushVertData(&b, 1);
 	qsb::batch_pushIndex(&b, 3);
 	
-	qsb::batch_pushVertex(&b, 111, 111);
-	qsb::batch_pushVertex(&b, 1);
-	qsb::batch_pushVertex(&b, 0);
-	qsb::batch_pushVertex(&b, 0);
+	qsb::batch_pushVertData(&b, 111);
+	qsb::batch_pushVertData(&b, 111);
+	qsb::batch_pushVertData(&b, 1);
+	qsb::batch_pushVertData(&b, 0);
+	qsb::batch_pushVertData(&b, 0);
 	qsb::batch_pushIndex(&b, 4);
 	
-	qsb::batch_pushVertex(&b, 0, 111);
-	qsb::batch_pushVertex(&b, 0);
-	qsb::batch_pushVertex(&b, 1);
-	qsb::batch_pushVertex(&b, 0);
+	qsb::batch_pushVertData(&b, 0);
+	qsb::batch_pushVertData(&b, 111);
+	qsb::batch_pushVertData(&b, 0);
+	qsb::batch_pushVertData(&b, 1);
+	qsb::batch_pushVertData(&b, 0);
 	qsb::batch_pushIndex(&b, 5);
 
-	qsb::drawBatch(&b);
+	//qsb::drawBatch(&b);
 
-	/*kc8::Emitter2D* em = kc8::createEmitter(100);
+	kc8::Emitter2D* em = kc8::createEmitter(400000);
+	srand(time(0));
+	int i = 400000;
+	while (i--)
+	{
+		int x = (rand() % 100) - 50;
+		int y = (rand() % 100) - 50;
 
-	kc8::emitParticles(em, 2, { 200, 200 }, { 1, 1 });
-	kc8::renderEmitter(em);*/
-
-	SDL_GL_SwapWindow(window);
-
-
+		kc8::emitParticles(em, 1, { 200, 200 }, { 0.05 * x, -0.02 * y });
+	}
 	bool running = true;
 	while(running)
 	{
@@ -129,7 +138,21 @@ int main(int argc, char* argv[])
 			{
 				running = false;	
 			}
+
 		}
+
+		
+
+		glClear(GL_COLOR_BUFFER_BIT);
+		
+		kc8::updateEmitter(em);
+		
+		kc8::renderEmitter(em);
+		
+
+		SDL_GL_SwapWindow(window);
+
+		
 
 	}
 	

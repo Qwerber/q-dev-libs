@@ -2,6 +2,7 @@
 #include "Emitter.h"
 #include <stdlib.h>
 #include "glbatch.h"
+#include <Windows.h>
 
 namespace kc8
 {
@@ -15,37 +16,7 @@ namespace kc8
 
 		ret->particles = (Particle2D*)malloc(_maxParticles * sizeof(Particle2D));
 
-		ret->particleBatch = qsb::createBatch(2, _maxParticles);
-		/*qsb::batch_setProgram(
-			ret->particleBatch,
-			qsb::createProgram(
-			qsb::createShader(
-			GL_VERTEX_SHADER,
-			"#version 130\n"
-			"in vec2 position;"
-			"in vec2 corner;"
-			"in vec4 color;"
-			"out vec4 color_v;"
-			"uniform mat4 gl_ModelViewMatrix;"
-			"void main(){"
-			"  gl_Position = gl_ModelViewMatrix * vec4(position.x + corner.x, position.y + corner.y,"
-			"    0, 1);"
-			"  color_v = color;"
-			"}"
-			),
-			qsb::createShader(
-			GL_FRAGMENT_SHADER,
-			"#version 130\n"
-			"in vec4 color_v;"
-			"out vec4 LFragColor;"
-			"void main(){"
-			"  LFragColor = color_v;"
-			"}"
-			)
-			)
-		);
-
-		qsb::batch_generateAttributeData(ret->particleBatch, "position{ff}corner{ff}color{ffff}");*/
+		ret->particleBatch = qsb::createBatch(5, _maxParticles * 6);
 
 		qsb::batch_setProgram(ret->particleBatch,
 							  qsb::createProgram(
@@ -53,19 +24,25 @@ namespace kc8
 							  GL_VERTEX_SHADER,
 							  "#version 130\n"
 							  "in vec2 LVertexPos2D;"
-							  "out vec4 color;"
+							  "in vec3 color;"
+							  "out vec3 color_v;"
 							  "uniform mat4 gl_ModelViewMatrix;"
 							  "void main() {"
-							  "  color = vec4(1,(LVertexPos2D.x-200)/111,(LVertexPos2D.x - 200)/111,1);"
+							  "  color_v = color;"
 							  "  gl_Position = gl_ModelViewMatrix * vec4( LVertexPos2D.x, LVertexPos2D.y, 0, 1 ); "
 							  "}"
 							  ),
 							  qsb::createShader(
 							  GL_FRAGMENT_SHADER,
-							  "#version 130\n in vec4 color; out vec4 LFragment;  void main() { LFragment  = color; }"
+							  "#version 130\n"
+							  "in vec3 color_v;"
+							  "out vec4 LFragment;"
+							  "void main() { "
+							  "  LFragment  = vec4(color_v.x, color_v.y, color_v.z, 0.5); "
+							  "}"
 							  )));
 
-		qsb::batch_generateAttributeData(ret->particleBatch, "LVertexPos2D{ff}");
+		qsb::batch_generateAttributeData(ret->particleBatch, "LVertexPos2D{ff}color{fff}");
 
 		qsb::batch_PrintAttributeData(ret->particleBatch);
 
@@ -74,30 +51,48 @@ namespace kc8
 
 	void renderEmitter(Emitter2D* _emitter)
 	{
-		qsb::Batch * b = _emitter->particleBatch;
+
+		unsigned int t = GetTickCount();
+
+		qsb::Batch* b = _emitter->particleBatch;
 		int ind = 0;
 		int i = _emitter->numParticles;
 		while (i--)
 		{
-			printf("ind %d", ind);
 
-			qsb::batch_pushVertex(b, _emitter->particles[i].position.x, _emitter->particles[i].position.y);
-			qsb::batch_pushIndex(b, ind++);
-			qsb::batch_pushVertex(b, _emitter->particles[i].position.x, _emitter->particles[i].position.y + 111);
-			qsb::batch_pushIndex(b, ind++);
-			qsb::batch_pushVertex(b, _emitter->particles[i].position.x + 111, _emitter->particles[i].position.y);
-			qsb::batch_pushIndex(b, ind++);
-			qsb::batch_pushVertex(b, _emitter->particles[i].position.x + 111, _emitter->particles[i].position.y);
-			qsb::batch_pushIndex(b, ind++);
-			qsb::batch_pushVertex(b, _emitter->particles[i].position.x + 111, _emitter->particles[i].position.y + 111);
-			qsb::batch_pushIndex(b, ind++);
-			qsb::batch_pushVertex(b, _emitter->particles[i].position.x, _emitter->particles[i].position.y + 111);
-			qsb::batch_pushIndex(b, ind++);
+			Vector2D p = _emitter->particles[i].position;
 
-			printf("%f", _emitter->particles[i].position.x);
+			qsb::batch_pushVertData(b, p.x);
+			qsb::batch_pushVertData(b, p.y);
+			qsb::batch_pushVertData(b, 1);
+			qsb::batch_pushVertData(b, 1);
+			qsb::batch_pushVertData(b, 0);
+
+			qsb::batch_pushVertData(b, p.x + 20);
+			qsb::batch_pushVertData(b, p.y);
+			qsb::batch_pushVertData(b, 1);
+			qsb::batch_pushVertData(b, 1);
+			qsb::batch_pushVertData(b, 0);
+
+			qsb::batch_pushVertData(b, p.x);
+			qsb::batch_pushVertData(b, p.y + 20);
+			qsb::batch_pushVertData(b, 1);
+			qsb::batch_pushVertData(b, 1);
+			qsb::batch_pushVertData(b, 0);
+
+			qsb::batch_pushVertData(b, p.x + 20);
+			qsb::batch_pushVertData(b, p.y + 20);
+			qsb::batch_pushVertData(b, 1);
+			qsb::batch_pushVertData(b, 1);
+			qsb::batch_pushVertData(b, 0);
+
+			qsb::batch_pushQuadIndex(b);
 		}
-
+		printf("main: %u\n", GetTickCount() - t);
 		qsb::drawBatch(b);
+		qsb::batch_reset(b);
+
+		
 	}
 
 	void emitParticles(Emitter2D* _emitter, int _numParticles, Vector2D _position, Vector2D _velocity)
@@ -120,7 +115,7 @@ namespace kc8
 			_emitter->insertionPoint = ins = 0;
 
 		//fix this later
-		_emitter->particles[ins].acceleration = { 0, 0.2 };
+		_emitter->particles[ins].acceleration = { 0, 0.002 };
 		_emitter->particles[ins].position = _position;
 		_emitter->particles[ins].velocity = _velocity;
 
