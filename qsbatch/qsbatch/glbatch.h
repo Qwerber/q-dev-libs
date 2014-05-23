@@ -17,6 +17,83 @@ namespace qsb
 		GLenum type;
 	};
 
+	struct GLBatch
+	{
+		/*
+		 * Create a new GLBatch Object 
+		 * @param _bytesPerVertex  The number of bytes to allocate for each vertex
+		 * @param _vertextLength   The maximum number of vertexes that the structure can hold
+		 * @param _indexLength     The maximum amount of elements in the indexBuffer
+		 */
+		GLBatch(GLuint _bytesPerVertex, GLuint _vertexLength, GLuint _indexLength);
+
+		//destructor
+		~GLBatch();
+
+		/*
+		 * Resets the GLBatch
+		 * This function resets dataPointer to original locations and sets writingIndex to 0
+		 */
+		void reset();
+
+		/*
+		 * Sets the program that the GLBatch will use when draw() is called
+		 * @param _program  The program that the GLBatch will use
+		 */
+		void setProgram(GLuint _program);
+
+		/*
+		 * Gives the GLBatch information that it will use when configuring vbos and buffering data
+		 * The format is as follows:
+		 *  <attribute><rest> where:
+		 *   <attribute> is:
+		 *    <field name>{<bytes per data><char corresponding to type x (data amount)>}
+		 *   <rest> is:
+		 *    <attribute><or><nothing>
+		 *
+		 * Data is assumed to be aligned in same order 
+		 *
+		 * Example data: position{4ff}color{1bbb}uv{4ff}
+		 */
+		void generateAttributeData(char* _data);
+
+		template<typename DataType>
+		inline void pushData(DataType _data){ *(((DataType*)vbDataPointer)++) = _data; }
+
+		inline void pushIndex(GLuint _i) { *(ibDataPointer++) = _i; }
+
+		inline void pushQUadIndex()
+		{
+			pushIndex(writingIndex++);
+			pushIndex(writingIndex++);
+			pushIndex(writingIndex);
+			pushIndex(--writingIndex);
+			pushIndex(++writingIndex);
+			pushIndex(++writingIndex);
+			writingIndex++;
+		}
+
+		GLuint
+			bytesPerVertex,
+			vertexLength,
+			indexLength,
+			writingIndex,
+			
+			*ibDataPointer,
+
+			shaderProgram,
+			
+			numAttributes;
+
+		void
+			*vertexData,
+			*indexData,
+
+			*vbDataPointer;
+
+		VertexAttribute attributes[16];		
+	};
+
 	struct Batch
 	{
 	
@@ -24,7 +101,6 @@ namespace qsb
 		GLuint length;
 
 		GLuint shaderProgram;
-		GLint vertexLocation;
 
 		GLfloat* vertextData;
 		GLuint* indexData;

@@ -38,7 +38,7 @@ namespace kc8
 							  "in vec3 color_v;"
 							  "out vec4 LFragment;"
 							  "void main() { "
-							  "  LFragment  = vec4(color_v.x, color_v.y, color_v.z, 0.5); "
+							  "  LFragment  = vec4(color_v.x, color_v.y, color_v.z, 1); "
 							  "}"
 							  )));
 

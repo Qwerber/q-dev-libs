@@ -10,6 +10,7 @@
 #include <vector>
 #include <Windows.h>
 #include "glbatch.h"
+#include "utils.h"
 
 namespace qsb
 {
@@ -32,6 +33,9 @@ namespace qsb
 	// OpenGL objects
 	static GLuint vertexBuffer;
 	static GLuint indexBuffer;
+
+	//fix this later
+	GLuint types[256];
 
 #pragma region "lazyfoo functions"
 	void printShaderLog( GLuint shader )
@@ -222,10 +226,98 @@ namespace qsb
 	}
 #pragma endregion
 
+#pragma region "GLBatch"
+
+	GLBatch::GLBatch(GLuint _bytesPerVertex, GLuint _vertexLength, GLuint _indexLength):
+		bytesPerVertex(_bytesPerVertex),
+		vertexLength(_vertexLength),
+		indexLength(_indexLength)
+	{
+		shaderProgram = NULL;
+		vertexData = new GLubyte[vertexLength * _bytesPerVertex];
+		indexData = new GLuint[indexLength];
+
+		vbDataPointer = vertexData;
+		ibDataPointer = indexData;
+		writingIndex = 0;
+
+		numAttributes = 0;
+	}
+
+	void GLBatch::reset()
+	{
+		ibDataPointer = indexData;
+		vbDataPointer = vertexData;
+		writingIndex = 0;
+	}
+
+	void GLBatch::setProgram(GLuint _program)
+	{
+		shaderProgram = _program;
+	}
+
+	void GLBatch::generateAttributeData(char* _data)
+	{
+		char* copy = _strdup(_data);
+
+		int ANAME = 0, ATYPES = 1, state = 0, dataSize = 0;
+		char* tok, *save;
+
+		tok = strtok_s(copy, "{", &save);
+		while (tok)
+		{
+			if (ANAME == state)
+			{
+				attributes[numAttributes].location = glGetAttribLocation(shaderProgram, tok);;
+				tok = strtok_s(0, "}", &save);
+				state = ATYPES;
+			}
+			else if (ATYPES == state)
+			{
+				int size = strlen(tok) - 1;
+				attributes[numAttributes].dim = size;
+				attributes[numAttributes].type = types[tok[1]];
+				attributes[numAttributes].start = dataSize;
+				dataSize += types[tok[0]] * size;
+				numAttributes++;
+
+				tok = strtok_s(0, "{", &save);
+				state = ANAME;
+			}
+
+		}
+	}
+
+	GLBatch::~GLBatch()
+	{
+		if (indexData)
+		{
+			delete[] indexData;
+			indexData = NULL;
+		}
+		if (vertexData)
+		{
+			delete[] vertexData;
+			vertexData = NULL;
+		}
+	}
+
+#pragma endregion
+
 	int initGLBatch(int _screenWidth, int _screenHeight, int _defaultColor, SDL_Window* _window)
 	{
 		////////////////////
 		//   Batch things
+
+		types['f'] = GL_FLOAT;
+		types['b'] = GL_UNSIGNED_BYTE;
+		types['s'] = GL_UNSIGNED_SHORT;
+		types['S'] = GL_SHORT;
+
+		types['1'] = 1;
+		types['1'] = 2;
+		types['1'] = 3;
+		types['1'] = 4;
 
 		// store values
 		screenWidth = screenWidth;
@@ -298,10 +390,10 @@ namespace qsb
 		
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 
-		glBufferData(GL_ARRAY_BUFFER, (GLuint)(_b->vbDataPointer - _b->vertextData) * sizeof(GLfloat), _b->vertextData, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, (GLuint)(_b->vbDataPointer - _b->vertextData) * sizeof(GLfloat), _b->vertextData, GL_DYNAMIC_DRAW);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLuint)(_b->ibDataPointer - _b->indexData) * sizeof(GLuint), _b->indexData, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLuint)(_b->ibDataPointer - _b->indexData) * sizeof(GLuint), _b->indexData, GL_DYNAMIC_DRAW);
 		//printf("bufferdata: %u\n", GetTickCount() - t);
 
 		t = GetTickCount();
