@@ -288,6 +288,20 @@ namespace qsb
 		}
 	}
 
+	void GLBatch::printAttributeData()
+	{
+		int i = numAttributes;
+		printf_s("shader: \n");
+		while (i--)
+		{
+			printf_s("location:%d | dimension:%d | type:%d | start:%d\n",
+					 attributes[i].location,
+					 attributes[i].dim,
+					 attributes[i].type,
+					 attributes[i].start);
+		}
+	}
+
 	GLBatch::~GLBatch()
 	{
 		if (indexData)
@@ -315,9 +329,9 @@ namespace qsb
 		types['S'] = GL_SHORT;
 
 		types['1'] = 1;
-		types['1'] = 2;
-		types['1'] = 3;
-		types['1'] = 4;
+		types['2'] = 2;
+		types['3'] = 3;
+		types['4'] = 4;
 
 		// store values
 		screenWidth = screenWidth;
@@ -380,6 +394,48 @@ namespace qsb
 
 		return 1;
 	
+	}
+
+	int drawGLBatch(GLBatch* _b)
+	{
+		glUseProgram(_b->shaderProgram);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, (char*)(_b->vbDataPointer) - (char*)_b->vertexData, (_b->vertexData), GL_DYNAMIC_DRAW);
+
+		printf("bytes:%d", (char*)(_b->vbDataPointer) - (char*)_b->vertexData);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (char*)(_b->ibDataPointer) - (char*)(_b->indexData), _b->indexData, GL_DYNAMIC_DRAW);
+
+
+		{
+			int i = _b->numAttributes;
+			while (i--)
+			{
+				glEnableVertexAttribArray(_b->attributes[i].location);
+				glVertexAttribPointer(_b->attributes[i].location,
+									  _b->attributes[i].dim,
+									  _b->attributes[i].type,
+									  GL_FALSE,
+									  _b->bytesPerVertex,
+									  (void*)(_b->attributes[i].start));
+			}
+		}
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+		glDrawElements(GL_TRIANGLES, (GLuint)(_b->ibDataPointer - _b->indexData), GL_UNSIGNED_INT, 0);
+
+		{
+			int i = _b->numAttributes;
+			while (i--)
+			{
+				glDisableVertexAttribArray(_b->attributes[i].location);
+			}
+		}
+
+		glUseProgram(0);
+
+		return 0;
 	}
 
 	// draw a single batch 

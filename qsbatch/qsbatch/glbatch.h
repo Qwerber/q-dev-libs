@@ -8,12 +8,27 @@ namespace qsb
 	extern const int OK;
 	extern const int FAIL;
 
+#pragma region "modern"
+	////////////////////
+	// MODERN GLBATCH
+
+	/*
+	 * Data structure for storing information about vertex attributes 
+	 * This helps the batch to properly link with OpenGL
+	 */
 	struct VertexAttribute
 	{
-		GLint location;
-		GLint dim;
-		GLint start;
-		GLint skip;
+		GLint 
+			// Location of the vertex attribute
+			location,
+			// One of 1,2,3 or 4, the amoun of componenets the "vec" has
+			dim,
+			// Starting byte offset of the attribute used for offset
+			start,
+			// The "stride" in bytes
+			skip;
+
+		// The value type
 		GLenum type;
 	};
 
@@ -57,12 +72,20 @@ namespace qsb
 		 */
 		void generateAttributeData(char* _data);
 
+		void printAttributeData();
+
 		template<typename DataType>
-		inline void pushData(DataType _data){ *(((DataType*)vbDataPointer)++) = _data; }
+		inline void* pushData(DataType _data)
+		{
+			void* ret = vbDataPointer;
+			*((DataType*)vbDataPointer) = _data;
+			vbDataPointer = (DataType*)vbDataPointer + 1;
+			return ret;
+		}
 
 		inline void pushIndex(GLuint _i) { *(ibDataPointer++) = _i; }
 
-		inline void pushQUadIndex()
+		inline void pushQuadIndex()
 		{
 			pushIndex(writingIndex++);
 			pushIndex(writingIndex++);
@@ -80,16 +103,14 @@ namespace qsb
 			writingIndex,
 			
 			*ibDataPointer,
+			*indexData,
 
 			shaderProgram,
 			
 			numAttributes;
 
-		void
-			*vertexData,
-			*indexData,
-
-			*vbDataPointer;
+		void* vertexData;
+		void* vbDataPointer;
 
 		VertexAttribute attributes[16];		
 	};
@@ -114,6 +135,7 @@ namespace qsb
 		
 		GLuint indexValue;
 	};
+#pragma endregion
 
 	Batch* createBatch(int _dataPerVertex, int _length);
 	void destroyBatch(Batch* _batch);
@@ -160,6 +182,7 @@ namespace qsb
 
 	int pushBatch(Batch* _batch);
 	int drawBatch(Batch* _b);
+	int drawGLBatch(GLBatch* _b);
 	int drawAllBatches();
 	int display();
 

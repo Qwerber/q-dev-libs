@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 
 	qsb::batch_generateAttributeData(&b, "LVertexPos2D{ff}c{fff}");
 
-	qsb::batch_PrintAttributeData(&b);
+	//qsb::batch_PrintAttributeData(&b);
 
 	qsb::batch_pushVertData(&b, 0);
 	qsb::batch_pushVertData(&b, 0);
@@ -119,7 +119,62 @@ int main(int argc, char* argv[])
 
 	//qsb::drawBatch(&b);
 
-	kc8::Emitter2D* em = kc8::createEmitter(400000);
+	qsb::GLBatch* glb = new qsb::GLBatch(16, 3, 3);
+	glb->setProgram(
+		qsb::createProgram(
+		qsb::createShader(
+		GL_VERTEX_SHADER,
+		"#version 130\n"
+		"in vec2 LVertexPos2D;"
+		"in vec3 color;"
+		"out vec3 color_v;"
+		"uniform mat4 gl_ModelViewMatrix;"
+		"void main() {"
+		"  color_v = color;"
+		"  gl_Position = gl_ModelViewMatrix * vec4( LVertexPos2D.x, LVertexPos2D.y, 0, 1 ); "
+		"}"
+		),
+		qsb::createShader(
+		GL_FRAGMENT_SHADER,
+		"#version 130\n"
+		"in vec3 color_v;"
+		"out vec4 LFragment;"
+		"void main() { "
+		"  LFragment  = vec4(color_v.x, color_v.y, color_v.z, 1); "
+		"}"
+		)));
+
+	glb->generateAttributeData("LVertexPos2D{2ss}color{4fff}");
+	glb->printAttributeData();
+
+	glb->pushData<GLushort>(10);
+	glb->pushData<GLushort>(10);
+	glb->pushData<GLfloat>(1.0f);
+	glb->pushData<GLfloat>(1.0f);
+	glb->pushData<GLfloat>(1.0f);
+
+	glb->pushData<GLushort>(100);
+	glb->pushData<GLushort>(10);
+	glb->pushData<GLfloat>(1.0f);
+	glb->pushData<GLfloat>(1.0f);
+	glb->pushData<GLfloat>(1.0f);
+
+	glb->pushData<GLushort>(10);
+	glb->pushData<GLushort>(100);
+	glb->pushData<GLfloat>(1.0f);
+	glb->pushData<GLfloat>(1.0f);
+	glb->pushData<GLfloat>(1.0f);
+
+	glb->pushIndex(0);
+	glb->pushIndex(1);
+	glb->pushIndex(2);
+
+
+	qsb::drawGLBatch(glb);
+
+	SDL_GL_SwapWindow(window);
+
+	/*kc8::Emitter2D* em = kc8::createEmitter(400000);
 	srand(time(0));
 	int i = 400000;
 	while (i--)
@@ -128,7 +183,7 @@ int main(int argc, char* argv[])
 		int y = (rand() % 100) - 50;
 
 		kc8::emitParticles(em, 1, { 200, 200 }, { 0.05 * x, -0.02 * y });
-	}
+	}*/
 	bool running = true;
 	while(running)
 	{
@@ -143,14 +198,14 @@ int main(int argc, char* argv[])
 
 		
 
-		glClear(GL_COLOR_BUFFER_BIT);
+		/*glClear(GL_COLOR_BUFFER_BIT);
 		
 		kc8::updateEmitter(em);
 		
-		kc8::renderEmitter(em);
+		kc8::renderEmitter(em);*/
 		
 
-		SDL_GL_SwapWindow(window);
+		
 
 		
 
