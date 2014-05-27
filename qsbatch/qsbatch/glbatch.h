@@ -72,6 +72,9 @@ namespace qsb
 		 */
 		void generateAttributeData(char* _data);
 
+		/*
+		 * Outputs information about the shaderprogram and its attribute
+		 */
 		void printAttributeData();
 
 		template<typename DataType>
